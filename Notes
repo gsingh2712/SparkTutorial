@@ -1,0 +1,98 @@
+Spark Core is general purpose Compute Engine
+You Define Data Processing tasks in using Spark Core, which is then taken up by YARN and HDFS
+
+Many Spark Libraries build on top of Spark Core for specific Use Cases:-
+	1. Spark SQL
+	2. Spark Streaming
+	3. MLLib
+	4. GraphX
+
+Why Spark if Underlying it is Hadoop?
+
+1. Abstraction provided due to distrbuted Processing.
+2. Support for various things where bare-bone Hadoop does not work
+	1. Real time as well Batch Processing
+3. REPL Envrionment
+	-> Interactive Shell used to run and Protoytpe Spark
+4. Support for different languages -> Pyhton, R, Scala, Java
+
+All Spark operations work on in memory Objects (RDD's) , -> main difference between Spark and Hadoop.
+
+Spark oeprates on RDD -> either change the contents or apply transformations.
+
+Characteristics of RDD's:-
+1. Entire Contents of it are split across the multiple nodes in the spark.
+2. RDD's are immutable once created cannot be edited, only transformations are done to get new RDD.
+3. RDD's are resileint , can be reconstructed even at node crashes.
+	Due to RDD lineage , each RDD stores its source (from a file or a RDD ) and spark is aware of this lineage and hence can reconstruct RDD
+
+Note :- Every RDD data is stored in memory across nodes and not on disk? Really?
+	What does that entail? it means you have petabytes of DATA then you have petabtyes of RAM across all nodes to contain the data?
+
+Actual excecution happens at the time of action , the trigger the chain of events (like transformations in between).
+
+
+DataFarame in Python <-> DataSet in Scala,Java (Spark) , these are not to be confussed with RDD , they are build on top of it.
+
+Spark Architecture:-
+
+Spark Cluster works in a classic master worker configuration,
+1. Master Node coordiantes all the process which run on worker notes,
+The Master node runs a driver program whihc is a seperate JVM process 
+The Driver program is responsible for launching tasks which run on individual wroker nodes
+these tasks operated on subset of RDD's that are present in the node.
+
+The Drvier program contain within a sparkcontext whihc is heart of any Spark Application.
+SparkContext can be thought of as a getway to the spark environment and all that it has to offer
+from your program. The Driver program plays host to a bunch of different services such as 
+SparkEnv, DAGScheduler , Task Scheduler , SparkUI 
+
+With in Driver program you instantiate Spark Application you want to run, which uses SparkContext 
+as entry point. SparkContext is used to kick start the application, the application will then 
+read the Data and perform a  series of Data transformations and actions. These operations are 
+represented in the form of a DAG of RDD's. Post that Spark creates the physical executtion plan for this DAG,
+in form of Stages. Multiple logic operations may be grouped into task that are logical operations on RDD.
+
+SparkContext in Spark 2 is wrapped in SparkSession, while working on real spark programs in spark 2 you tend to use
+SparkSession , SparkSession serves as a unifying mechanism for all interactions with the Spark environment i.e it 
+encapsulates SparkSQL , HiveContext .
+SparkSession interacts with the Cluster manager (YARN , Mesos, Spark Standalone).
+Cluster Manger is responsible for orchestrating execution and distributing jobs to worker nodes.
+
+Each Worker Starts the Executor on worker nodes ( wroker -> many Excecutors)
+Executors are distributed agents that executes task on worker nodes. Tasks are the basic unit of 
+execution 
+
+SPARKSESSION 
+
+Its simplified entry into your Spark Application, encapsulating Spark Context 
+
+
+Spark 
+
+BroadCast Varibales
+	Shared Read Only Variables
+	One Copy Per Node (not one copy per task)
+
+	More efficient as they are distributed by Spark
+	all nodes participate in distribution not just master
+	Eliminate need of Shuffling
+	held in memory cache -> cannot be too large
+	
+	Usefule:-
+	Whenever you have tasks in different stages of execution but need same data 
+		Like broadcasting all training data in ML to all nodes
+		
+       Can be useful when performing join across datasets. broadcats small
+	datasets across nodes
+	m2-demo-Soccer.ipynb -> Line 34 
+
+Accumulators:-
+
+	Are Read Wtite Variables
+	Not all modifications -> only added -> operation has to be associatively and commutatively
+
+Spark SQL in code/m3... files
+
+Catalyst Optimizer :-
+	Optimization Engine that powers spark SQL
